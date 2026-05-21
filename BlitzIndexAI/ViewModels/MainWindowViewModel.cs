@@ -27,11 +27,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AnalyzeCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RefreshQueryStoreCommand))]
     private string? _selectedDatabase;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AnalyzeCommand))]
     [NotifyCanExecuteChangedFor(nameof(UpdateStatisticsCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RefreshQueryStoreCommand))]
     private string? _selectedTable;
 
     [ObservableProperty]
@@ -43,6 +45,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AnalyzeCommand))]
     [NotifyCanExecuteChangedFor(nameof(ExecuteSqlCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RefreshQueryStoreCommand))]
     private bool _isBusy;
 
     private string _apiKey = string.Empty;
@@ -164,6 +167,24 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             IsBusy = false;
         }
+    }
+
+    private bool CanRefreshQueryStore() => SelectedDatabase != null && SelectedTable != null && !IsBusy;
+
+    [RelayCommand(CanExecute = nameof(CanRefreshQueryStore))]
+    private async Task RefreshQueryStoreAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            StatusMessage = "Refreshing Query Store...";
+            QueryStoreResults.Clear();
+            var results = await _sql.GetQueryStoreResultsAsync(SelectedDatabase!, SelectedTable!);
+            foreach (var r in results) QueryStoreResults.Add(r);
+            StatusMessage = $"Query Store refreshed — {results.Count} result(s).";
+        }
+        catch (Exception ex) { StatusMessage = $"Query Store error: {ex.Message}"; }
+        finally { IsBusy = false; }
     }
 
     private bool CanExecuteSql() =>

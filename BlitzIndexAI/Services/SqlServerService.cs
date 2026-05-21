@@ -118,7 +118,7 @@ public class SqlServerService
             JOIN [{EscapeName(dbName)}].sys.query_store_runtime_stats rs ON p.plan_id        = rs.plan_id
             WHERE CAST(p.query_plan AS NVARCHAR(MAX)) LIKE N'%MissingIndex%'
               AND qt.query_sql_text LIKE N'%' + @tbl + N'%'
-            ORDER BY rs.avg_logical_io_reads DESC;
+            ORDER BY rs.last_execution_time DESC;
             """;
 
         await using var conn = new SqlConnection(ConnectionString);

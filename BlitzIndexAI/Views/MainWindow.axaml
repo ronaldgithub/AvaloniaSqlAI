@@ -128,19 +128,27 @@
 
                 <!-- Tab 2: Query Store -->
                 <TabItem Header="Query Store">
-                    <DataGrid ItemsSource="{Binding QueryStoreResults}"
-                              SelectedItem="{Binding SelectedQueryStoreResult}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              CanUserSortColumns="True"
-                              GridLinesVisibility="Horizontal">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Query"       Binding="{Binding QueryText}"       Width="*"/>
-                            <DataGridTextColumn Header="Executions"  Binding="{Binding ExecutionCount}"  Width="90"/>
-                            <DataGridTextColumn Header="Avg LIO"     Binding="{Binding AvgLogicalReads}" Width="90"/>
-                            <DataGridTextColumn Header="Avg ms"      Binding="{Binding AvgDurationMs}"   Width="80"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                    <DockPanel>
+                        <Button DockPanel.Dock="Top"
+                                Content="Refresh"
+                                Command="{Binding RefreshQueryStoreCommand}"
+                                HorizontalAlignment="Left"
+                                Margin="0,0,0,6"
+                                Padding="12,4"/>
+                        <DataGrid ItemsSource="{Binding QueryStoreResults}"
+                                  SelectedItem="{Binding SelectedQueryStoreResult}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  CanUserSortColumns="True"
+                                  GridLinesVisibility="Horizontal">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Query"       Binding="{Binding QueryText}"       Width="*"/>
+                                <DataGridTextColumn Header="Executions"  Binding="{Binding ExecutionCount}"  Width="90"/>
+                                <DataGridTextColumn Header="Avg LIO"     Binding="{Binding AvgLogicalReads}" Width="90"/>
+                                <DataGridTextColumn Header="Avg ms"      Binding="{Binding AvgDurationMs}"   Width="80"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
                 </TabItem>
 
                 <!-- Tab 3: Benchmark -->
