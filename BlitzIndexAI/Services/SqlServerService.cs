@@ -155,5 +155,69 @@ public class SqlServerService
         }
     }
 
+    public async Task<List<BenchmarkStats>> RunWithStatisticsAsync(string dbName, string queryText)
+    {
+        var messages = new System.Collections.Concurrent.ConcurrentBag<string>();
+        var csb = new SqlConnectionStringBuilder(ConnectionString) { InitialCatalog = dbName };
+        await using var conn = new SqlConnection(csb.ConnectionString);
+        conn.InfoMessage += (_, e) => { foreach (SqlError err in e.Errors) messages.Add(err.Message); };
+        await conn.OpenAsync();
+
+        var sql = "SET STATISTICS TIME ON;\nSET STATISTICS IO ON;\n" + queryText;
+        await using var cmd = new SqlCommand(sql, conn) { CommandTimeout = 120 };
+        await using var reader = await cmd.ExecuteReaderAsync();
+        do { while (await reader.ReadAsync()) { } } while (await reader.NextResultAsync());
+
+        return ParseStatisticsMessages(messages);
+    }
+
+    private static List<BenchmarkStats> ParseStatisticsMessages(IEnumerable<string> messages)
+    {
+        var result = new List<BenchmarkStats>();
+        long cpuMs = 0, elapsedMs = 0;
+
+        var ioPattern   = new Regex(@"Table '([^']+)'\.\s+Scan count \d+,\s+logical reads (\d+),\s+physical reads (\d+).*?read-ahead reads (\d+)", RegexOptions.IgnoreCase);
+        var timePattern = new Regex(@"CPU time = (\d+) ms.*?elapsed time = (\d+) ms", RegexOptions.IgnoreCase);
+
+        foreach (var msg in messages)
+        {
+            var ioMatch = ioPattern.Match(msg);
+            if (ioMatch.Success)
+            {
+                result.Add(new BenchmarkStats
+                {
+                    Label          = ioMatch.Groups[1].Value,
+                    LogicalReads   = long.Parse(ioMatch.Groups[2].Value),
+                    PhysicalReads  = long.Parse(ioMatch.Groups[3].Value),
+                    ReadAheadReads = long.Parse(ioMatch.Groups[4].Value)
+                });
+                continue;
+            }
+            var timeMatch = timePattern.Match(msg);
+            if (timeMatch.Success)
+            {
+                cpuMs     = Math.Max(cpuMs,     long.Parse(timeMatch.Groups[1].Value));
+                elapsedMs = Math.Max(elapsedMs, long.Parse(timeMatch.Groups[2].Value));
+            }
+        }
+
+        result.Add(new BenchmarkStats
+        {
+            Label     = "Query Time",
+            CpuMs     = cpuMs.ToString(),
+            ElapsedMs = elapsedMs.ToString()
+        });
+        return result;
+    }
+
+    public async Task UpdateStatisticsAsync(string dbName, string tableName)
+    {
+        var sql = $"UPDATE STATISTICS [{EscapeName(dbName)}].[dbo].[{EscapeName(tableName)}];";
+        await using var conn = new SqlConnection(ConnectionString);
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand(sql, conn) { CommandTimeout = 120 };
+        await cmd.ExecuteNonQueryAsync();
+    }
+
     private static string EscapeName(string name) => name.Replace("]", "]]");
 }

@@ -129,6 +129,7 @@
                 <!-- Tab 2: Query Store -->
                 <TabItem Header="Query Store">
                     <DataGrid ItemsSource="{Binding QueryStoreResults}"
+                              SelectedItem="{Binding SelectedQueryStoreResult}"
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
                               CanUserSortColumns="True"
@@ -140,6 +141,69 @@
                             <DataGridTextColumn Header="Avg ms"      Binding="{Binding AvgDurationMs}"   Width="80"/>
                         </DataGrid.Columns>
                     </DataGrid>
+                </TabItem>
+
+                <!-- Tab 3: Benchmark -->
+                <TabItem Header="Benchmark">
+                    <DockPanel Margin="8">
+
+                        <!-- Selected query display -->
+                        <Border DockPanel.Dock="Top"
+                                BorderThickness="1"
+                                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                Padding="6" Margin="0,0,0,8">
+                            <TextBox Text="{Binding SelectedQueryStoreResult.QueryText, FallbackValue='← Select a query in the Query Store tab'}"
+                                     IsReadOnly="True" TextWrapping="Wrap" MaxHeight="80"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                     FontFamily="Cascadia Code,Consolas,Courier New,monospace"
+                                     FontSize="12"/>
+                        </Border>
+
+                        <!-- Step buttons -->
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+                            <Button Content="1. Run BEFORE"        Command="{Binding RunBeforeCommand}"/>
+                            <Button Content="2. Execute Index"     Command="{Binding ExecuteSqlCommand}"/>
+                            <Button Content="3. Update Statistics" Command="{Binding UpdateStatisticsCommand}"/>
+                            <Button Content="4. Run AFTER"         Command="{Binding RunAfterCommand}"/>
+                        </StackPanel>
+
+                        <!-- Before / After grids -->
+                        <Grid ColumnDefinitions="*,8,*">
+
+                            <DockPanel Grid.Column="0">
+                                <TextBlock DockPanel.Dock="Top" Text="BEFORE" FontWeight="Bold" Margin="0,0,0,4"/>
+                                <DataGrid ItemsSource="{Binding BeforeStats}"
+                                          AutoGenerateColumns="False" IsReadOnly="True"
+                                          GridLinesVisibility="Horizontal">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Table / Label"  Binding="{Binding Label}"          Width="*"/>
+                                        <DataGridTextColumn Header="Logical Reads"  Binding="{Binding LogicalReads}"   Width="100"/>
+                                        <DataGridTextColumn Header="Physical Reads" Binding="{Binding PhysicalReads}"  Width="100"/>
+                                        <DataGridTextColumn Header="CPU ms"         Binding="{Binding CpuMs}"          Width="70"/>
+                                        <DataGridTextColumn Header="Elapsed ms"     Binding="{Binding ElapsedMs}"      Width="80"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DockPanel>
+
+                            <GridSplitter Grid.Column="1" ResizeDirection="Columns" Width="8"/>
+
+                            <DockPanel Grid.Column="2">
+                                <TextBlock DockPanel.Dock="Top" Text="AFTER" FontWeight="Bold" Margin="0,0,0,4"/>
+                                <DataGrid ItemsSource="{Binding AfterStats}"
+                                          AutoGenerateColumns="False" IsReadOnly="True"
+                                          GridLinesVisibility="Horizontal">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Table / Label"  Binding="{Binding Label}"          Width="*"/>
+                                        <DataGridTextColumn Header="Logical Reads"  Binding="{Binding LogicalReads}"   Width="100"/>
+                                        <DataGridTextColumn Header="Physical Reads" Binding="{Binding PhysicalReads}"  Width="100"/>
+                                        <DataGridTextColumn Header="CPU ms"         Binding="{Binding CpuMs}"          Width="70"/>
+                                        <DataGridTextColumn Header="Elapsed ms"     Binding="{Binding ElapsedMs}"      Width="80"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DockPanel>
+
+                        </Grid>
+                    </DockPanel>
                 </TabItem>
 
             </TabControl>

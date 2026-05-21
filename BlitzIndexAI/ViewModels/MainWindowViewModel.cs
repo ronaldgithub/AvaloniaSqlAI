@@ -31,6 +31,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AnalyzeCommand))]
+    [NotifyCanExecuteChangedFor(nameof(UpdateStatisticsCommand))]
     private string? _selectedTable;
 
     [ObservableProperty]
@@ -51,6 +52,14 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _hasSqlBlocks;
 
     public ObservableCollection<QueryStoreResult> QueryStoreResults { get; } = new();
+    public ObservableCollection<BenchmarkStats>   BeforeStats        { get; } = new();
+    public ObservableCollection<BenchmarkStats>   AfterStats         { get; } = new();
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(RunBeforeCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RunAfterCommand))]
+    [NotifyCanExecuteChangedFor(nameof(UpdateStatisticsCommand))]
+    private QueryStoreResult? _selectedQueryStoreResult;
 
     public MainWindowViewModel()
     {
@@ -196,6 +205,56 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             IsBusy = false;
         }
+    }
+
+    private bool CanRunBenchmark() => SelectedQueryStoreResult != null && !IsBusy;
+
+    [RelayCommand(CanExecute = nameof(CanRunBenchmark))]
+    private async Task RunBeforeAsync()
+    {
+        IsBusy = true;
+        BeforeStats.Clear();
+        try
+        {
+            StatusMessage = "Running BEFORE benchmark...";
+            var stats = await _sql.RunWithStatisticsAsync(SelectedDatabase!, SelectedQueryStoreResult!.QueryText);
+            foreach (var s in stats) BeforeStats.Add(s);
+            StatusMessage = $"BEFORE complete — {BeforeStats.Count - 1} table(s) captured.";
+        }
+        catch (Exception ex) { StatusMessage = $"BEFORE error: {ex.Message}"; }
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRunBenchmark))]
+    private async Task RunAfterAsync()
+    {
+        IsBusy = true;
+        AfterStats.Clear();
+        try
+        {
+            StatusMessage = "Running AFTER benchmark...";
+            var stats = await _sql.RunWithStatisticsAsync(SelectedDatabase!, SelectedQueryStoreResult!.QueryText);
+            foreach (var s in stats) AfterStats.Add(s);
+            StatusMessage = $"AFTER complete — {AfterStats.Count - 1} table(s) captured.";
+        }
+        catch (Exception ex) { StatusMessage = $"AFTER error: {ex.Message}"; }
+        finally { IsBusy = false; }
+    }
+
+    private bool CanUpdateStatistics() => SelectedTable != null && !IsBusy;
+
+    [RelayCommand(CanExecute = nameof(CanUpdateStatistics))]
+    private async Task UpdateStatisticsAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            StatusMessage = $"Updating statistics on [{SelectedTable}]...";
+            await _sql.UpdateStatisticsAsync(SelectedDatabase!, SelectedTable!);
+            StatusMessage = "Statistics updated.";
+        }
+        catch (Exception ex) { StatusMessage = $"Update statistics error: {ex.Message}"; }
+        finally { IsBusy = false; }
     }
 
     private void LoadConfig()
