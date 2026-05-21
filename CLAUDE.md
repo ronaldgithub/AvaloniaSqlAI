@@ -13,6 +13,11 @@ dotnet run --project BlitzIndexAI
 
 There are no tests. No linting step beyond the compiler.
 
+## Thanks to
+
+- [Erik Darling](https://github.com/erikdarlingdata/DarlingData) — SQL Server tools and expertise
+- [Brent Ozar](https://github.com/BrentOzarULTD/SQL-Server-First-Responder-Kit) — sp_BlitzIndex and the First Responder Kit
+
 ## Architecture
 
 This is a single-window Avalonia 12 / .NET 8 desktop app. The entry point is `Program.cs` → `App.axaml.cs` → `MainWindow` (which creates its own `MainWindowViewModel` in the constructor and wires up the confirmation dialog delegate).
