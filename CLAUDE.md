@@ -32,16 +32,28 @@ This is a single-window Avalonia 12 / .NET 8 desktop app. The entry point is `Pr
 3. Selecting a database loads its `dbo` tables via `INFORMATION_SCHEMA.TABLES`.
 4. **Analyze** runs `EXEC dbo.sp_BlitzIndex @DatabaseName=…, @SchemaName='dbo', @TableName=…, @AI=2` (the proc lives in `master`). With `@AI=2` the proc returns a result set with a single `[AI Prompt]` column of XML type (`FOR XML PATH('ai_prompt'), TYPE`). The service reads that via `SqlDataReader.GetSqlXml(0)` → `XDocument` → `.Root.Value` and saves the plain text to `output\ai_prompt.txt`.
 5. The prompt is split at the line `"I need help analyzing"` — everything before becomes the Claude `system` parameter, everything from that line onward is the `user` message. This is posted to `https://api.anthropic.com/v1/messages` (`claude-sonnet-4-6`, max 4096 tokens).
-6. **Execute SQL Script** parses ` ```sql … ``` ` blocks from the Claude response with a regex and runs each batch (split on `GO`) against the target database.
+6. After the AI response, the app queries Query Store DMVs (`sys.query_store_*`) for plans containing `MissingIndex` hints on the selected table and populates the **Query Store** tab.
+7. **Execute SQL Script** parses ` ```sql … ``` ` blocks from the Claude response with a regex and runs each batch (split on `GO`) against the target database.
+
+**Benchmark workflow (Benchmark tab):**
+
+1. Select a row in the **Query Store** tab — the query text appears at the top of the Benchmark tab.
+2. **1. Run BEFORE** — runs the query with `SET STATISTICS TIME ON; SET STATISTICS IO ON;` and captures `InfoMessage` events from the connection. Parses table-level IO rows and a Query Time summary into the BEFORE grid.
+3. **2. Execute Index** — same as Execute SQL Script; applies the AI-recommended CREATE INDEX (with confirmation dialog).
+4. **3. Update Statistics** — runs `UPDATE STATISTICS [db].[dbo].[table]`.
+5. **4. Run AFTER** — repeats the statistics capture into the AFTER grid.
+6. The two side-by-side grids show Logical Reads, Physical Reads, CPU ms, and Elapsed ms for direct before/after comparison.
 
 ## Key files
 
 | File | Role |
 | --- | --- |
-| `Services/SqlServerService.cs` | All SQL Server I/O: list DBs, list tables, run sp_BlitzIndex, execute scripts |
+| `Services/SqlServerService.cs` | All SQL Server I/O: list DBs, list tables, run sp_BlitzIndex, Query Store queries, statistics capture, execute scripts |
 | `Services/ClaudeApiService.cs` | Raw `HttpClient` POST to Claude API; handles prompt splitting and JSON parsing |
+| `Models/QueryStoreResult.cs` | Query Store row: QueryText, ExecutionCount, AvgLogicalReads, AvgDurationMs |
+| `Models/BenchmarkStats.cs` | Benchmark row: Label (table name or "Query Time"), LogicalReads, PhysicalReads, CpuMs, ElapsedMs |
 | `ViewModels/MainWindowViewModel.cs` | All state + commands; uses CommunityToolkit.Mvvm `[ObservableProperty]` / `[RelayCommand]` |
-| `Views/MainWindow.axaml` | Single-window UI: left panel (DB/table select), right panel (response text), bottom bar (API key + status) |
+| `Views/MainWindow.axaml` | Three-tab right panel: AI Recommendations, Query Store, Benchmark |
 | `Views/MainWindow.axaml.cs` | Wires `vm.ConfirmDialog` to a programmatic Avalonia `Window` dialog before Execute |
 
 ## CommunityToolkit.Mvvm conventions
