@@ -1,6 +1,8 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:BlitzIndexAI.ViewModels"
+        xmlns:models="using:BlitzIndexAI.Models"
+        xmlns:dg="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
@@ -91,38 +93,56 @@
                 </DockPanel>
             </Border>
 
-            <!-- Right panel: AI response + execute -->
-            <DockPanel Grid.Column="1" Margin="10">
+            <!-- Right panel: tabs -->
+            <TabControl Grid.Column="1" Margin="10">
 
-                <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
-                    <TextBlock Grid.Column="0"
-                               Text="Review the recommendations above before executing."
-                               VerticalAlignment="Center"
-                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                               FontStyle="Italic"
-                               TextWrapping="Wrap"/>
-                    <Button Grid.Column="1"
-                            Content="Execute SQL Script"
-                            Command="{Binding ExecuteSqlCommand}"
-                            HorizontalContentAlignment="Center"
-                            Padding="16,6"/>
-                </Grid>
+                <!-- Tab 1: AI Recommendations -->
+                <TabItem Header="AI Recommendations">
+                    <DockPanel>
 
-                <TextBlock DockPanel.Dock="Top"
-                           Text="AI Recommendations"
-                           FontWeight="SemiBold"
-                           Margin="0,0,0,6"/>
+                        <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                            <TextBlock Grid.Column="0"
+                                       Text="Review the recommendations above before executing."
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                       FontStyle="Italic"
+                                       TextWrapping="Wrap"/>
+                            <Button Grid.Column="1"
+                                    Content="Execute SQL Script"
+                                    Command="{Binding ExecuteSqlCommand}"
+                                    HorizontalContentAlignment="Center"
+                                    Padding="16,6"/>
+                        </Grid>
 
-                <TextBox Text="{Binding AiResponse}"
-                         AcceptsReturn="True"
-                         IsReadOnly="True"
-                         TextWrapping="Wrap"
-                         FontFamily="Cascadia Code,Consolas,Courier New,monospace"
-                         FontSize="13"
-                         ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         PlaceholderText="Select a database and table, then click 'Analyze Selected Table'..."/>
-            </DockPanel>
+                        <TextBox Text="{Binding AiResponse}"
+                                 AcceptsReturn="True"
+                                 IsReadOnly="True"
+                                 TextWrapping="Wrap"
+                                 FontFamily="Cascadia Code,Consolas,Courier New,monospace"
+                                 FontSize="13"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 PlaceholderText="Select a database and table, then click 'Analyze Selected Table'..."/>
+                    </DockPanel>
+                </TabItem>
+
+                <!-- Tab 2: Query Store -->
+                <TabItem Header="Query Store">
+                    <DataGrid ItemsSource="{Binding QueryStoreResults}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserSortColumns="True"
+                              GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Query"       Binding="{Binding QueryText}"       Width="*"/>
+                            <DataGridTextColumn Header="Executions"  Binding="{Binding ExecutionCount}"  Width="90"/>
+                            <DataGridTextColumn Header="Avg LIO"     Binding="{Binding AvgLogicalReads}" Width="90"/>
+                            <DataGridTextColumn Header="Avg ms"      Binding="{Binding AvgDurationMs}"   Width="80"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+
+            </TabControl>
         </Grid>
     </DockPanel>
 </Window>

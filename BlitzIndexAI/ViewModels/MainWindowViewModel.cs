@@ -5,6 +5,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using BlitzIndexAI.Models;
 using BlitzIndexAI.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -48,6 +49,8 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ExecuteSqlCommand))]
     private bool _hasSqlBlocks;
+
+    public ObservableCollection<QueryStoreResult> QueryStoreResults { get; } = new();
 
     public MainWindowViewModel()
     {
@@ -134,9 +137,15 @@ public partial class MainWindowViewModel : ViewModelBase
 
             AiResponse = response;
             HasSqlBlocks = Regex.IsMatch(response, @"```sql", RegexOptions.IgnoreCase);
+
+            StatusMessage = "Querying Query Store...";
+            QueryStoreResults.Clear();
+            var qsResults = await _sql.GetQueryStoreResultsAsync(SelectedDatabase!, SelectedTable!);
+            foreach (var r in qsResults) QueryStoreResults.Add(r);
+
             StatusMessage = HasSqlBlocks
-                ? "Analysis complete. SQL scripts ready — click 'Execute SQL Script' to apply."
-                : "Analysis complete. No SQL scripts found in the response.";
+                ? $"Analysis complete. SQL scripts ready — click 'Execute SQL Script' to apply. ({qsResults.Count} Query Store result(s) found.)"
+                : $"Analysis complete. No SQL scripts found. ({qsResults.Count} Query Store result(s) found.)";
         }
         catch (Exception ex)
         {

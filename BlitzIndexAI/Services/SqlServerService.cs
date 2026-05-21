@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using BlitzIndexAI.Models;
 using Microsoft.Data.SqlClient;
 
 namespace BlitzIndexAI.Services;
@@ -91,6 +92,51 @@ public class SqlServerService
         Directory.CreateDirectory(Path.GetDirectoryName(OutputPath)!);
         await File.WriteAllTextAsync(OutputPath, prompt, Encoding.UTF8);
         return prompt;
+    }
+
+    public async Task<List<QueryStoreResult>> GetQueryStoreResultsAsync(string dbName, string tableName)
+    {
+        var result = new List<QueryStoreResult>();
+
+        await using var checkConn = new SqlConnection(ConnectionString);
+        await checkConn.OpenAsync();
+        await using var checkCmd = new SqlCommand(
+            "SELECT is_query_store_on FROM sys.databases WHERE name = @db", checkConn);
+        checkCmd.Parameters.AddWithValue("@db", dbName);
+        var isOn = (bool?)await checkCmd.ExecuteScalarAsync();
+        if (isOn != true) return result;
+
+        var sql = $"""
+            SELECT TOP 20
+                qt.query_sql_text,
+                rs.count_executions,
+                CAST(rs.avg_logical_io_reads AS BIGINT)         AS avg_logical_reads,
+                CAST(rs.avg_duration / 1000.0 AS DECIMAL(10,2)) AS avg_duration_ms
+            FROM [{EscapeName(dbName)}].sys.query_store_query_text qt
+            JOIN [{EscapeName(dbName)}].sys.query_store_query        q  ON qt.query_text_id = q.query_text_id
+            JOIN [{EscapeName(dbName)}].sys.query_store_plan          p  ON q.query_id       = p.query_id
+            JOIN [{EscapeName(dbName)}].sys.query_store_runtime_stats rs ON p.plan_id        = rs.plan_id
+            WHERE CAST(p.query_plan AS NVARCHAR(MAX)) LIKE N'%MissingIndex%'
+              AND qt.query_sql_text LIKE N'%' + @tbl + N'%'
+            ORDER BY rs.avg_logical_io_reads DESC;
+            """;
+
+        await using var conn = new SqlConnection(ConnectionString);
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand(sql, conn) { CommandTimeout = 60 };
+        cmd.Parameters.AddWithValue("@tbl", tableName);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            result.Add(new QueryStoreResult
+            {
+                QueryText       = reader.GetString(0),
+                ExecutionCount  = reader.GetInt64(1),
+                AvgLogicalReads = reader.GetInt64(2),
+                AvgDurationMs   = (double)reader.GetDecimal(3)
+            });
+        }
+        return result;
     }
 
     public async Task ExecuteScriptAsync(string dbName, string sql)
