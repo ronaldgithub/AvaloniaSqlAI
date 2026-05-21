@@ -19,6 +19,7 @@ There are no tests. No linting step beyond the compiler.
 
 - [Erik Darling](https://github.com/erikdarlingdata/DarlingData) — SQL Server tools and expertise
 - [Brent Ozar](https://github.com/BrentOzarULTD/SQL-Server-First-Responder-Kit) — sp_BlitzIndex and the First Responder Kit
+- [Ronald de Groot](https://dbaronald.nl) — SQL Server blogs (1 picture, 1 comment, 1 script)
 
 ## Architecture
 
