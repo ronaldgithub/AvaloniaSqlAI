@@ -1,0 +1,128 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BlitzIndexAI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
+        x:Class="BlitzIndexAI.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="BlitzIndex AI Analyzer"
+        Width="1100" Height="700"
+        MinWidth="800" MinHeight="500">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <DockPanel>
+
+        <!-- Status bar -->
+        <Border DockPanel.Dock="Bottom"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="10,5">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding StatusMessage}"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"/>
+                <ProgressBar Grid.Column="1"
+                             IsIndeterminate="True"
+                             IsVisible="{Binding IsBusy}"
+                             Width="120" Height="10"
+                             Margin="10,0,0,0"/>
+            </Grid>
+        </Border>
+
+        <!-- Title header -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                Padding="14,10">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="BlitzIndex AI Analyzer"
+                           FontSize="20"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1"
+                           Text="ronald.de.groot@opendata.nl"
+                           FontSize="13"
+                           Foreground="#AADDFF"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- Main content -->
+        <Grid ColumnDefinitions="290,*">
+
+            <!-- Left panel: database + table selection -->
+            <Border Grid.Column="0"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="0,0,1,0"
+                    Padding="10">
+                <DockPanel>
+
+                    <Button DockPanel.Dock="Bottom"
+                            Content="Analyze Selected Table"
+                            Command="{Binding AnalyzeCommand}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            Margin="0,8,0,0"/>
+
+                    <StackPanel>
+                        <TextBlock Text="Database" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding Databases}"
+                                  SelectedItem="{Binding SelectedDatabase}"
+                                  HorizontalAlignment="Stretch"
+                                  Margin="0,0,0,14"/>
+
+                        <TextBlock Text="Tables (dbo schema)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <ListBox ItemsSource="{Binding Tables}"
+                                 SelectedItem="{Binding SelectedTable}"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <TextBlock Text="{Binding}" Padding="2"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- Right panel: AI response + execute -->
+            <DockPanel Grid.Column="1" Margin="10">
+
+                <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                    <TextBlock Grid.Column="0"
+                               Text="Review the recommendations above before executing."
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                               FontStyle="Italic"
+                               TextWrapping="Wrap"/>
+                    <Button Grid.Column="1"
+                            Content="Execute SQL Script"
+                            Command="{Binding ExecuteSqlCommand}"
+                            HorizontalContentAlignment="Center"
+                            Padding="16,6"/>
+                </Grid>
+
+                <TextBlock DockPanel.Dock="Top"
+                           Text="AI Recommendations"
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,6"/>
+
+                <TextBox Text="{Binding AiResponse}"
+                         AcceptsReturn="True"
+                         IsReadOnly="True"
+                         TextWrapping="Wrap"
+                         FontFamily="Cascadia Code,Consolas,Courier New,monospace"
+                         FontSize="13"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         PlaceholderText="Select a database and table, then click 'Analyze Selected Table'..."/>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+</Window>

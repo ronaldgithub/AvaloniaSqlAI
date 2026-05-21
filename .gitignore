@@ -1,0 +1,22 @@
+# Build output
+bin/
+obj/
+
+# Generated runtime output
+output/
+
+# User-specific Visual Studio files
+*.user
+*.suo
+.vs/
+
+# Rider
+.idea/
+
+# NuGet
+*.nupkg
+packages/
+
+# OS
+Thumbs.db
+.DS_Store
