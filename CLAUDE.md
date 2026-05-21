@@ -4,6 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Run
 
+To set the environment variable `ANTHROPIC_API_KEY3`, get your API key from the Anthropic console. Then run `sysdm.cpl`, go to **Advanced → Environment Variables**, create a new variable named `ANTHROPIC_API_KEY3` and paste the key as the value. NOTE: key becomes active after restart of VS Code.
+
 Run from the repo root:
 
 ```powershell
