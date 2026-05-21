@@ -14,7 +14,7 @@ namespace BlitzIndexAI.ViewModels;
 public partial class MainWindowViewModel : ViewModelBase
 {
     private static readonly string ConfigPath =
-        Path.Combine(@"C:\Projecten\Claude\AvaloniaAI\output", "config.json");
+        Path.Combine(AppContext.BaseDirectory, "output", "config.json");
 
     private readonly SqlServerService _sql = new();
     private readonly ClaudeApiService _claude = new();

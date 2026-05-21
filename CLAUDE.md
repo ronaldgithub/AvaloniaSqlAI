@@ -42,10 +42,12 @@ This is a single-window Avalonia 12 / .NET 8 desktop app. The entry point is `Pr
 - `[NotifyCanExecuteChangedFor(nameof(FooCommand))]` on an `[ObservableProperty]` field automatically calls `FooCommand.NotifyCanExecuteChanged()` on change — use this instead of manual `partial void OnXChanged`.
 - All `async` ViewModel methods avoid `ConfigureAwait(false)` so continuations stay on the UI thread; `ObservableCollection` modifications need no explicit dispatcher.
 
-## Config & output paths (hardcoded)
+## Config & output paths
+
+Paths are resolved relative to `AppContext.BaseDirectory` (the exe's directory) at runtime.
 
 | Path | Purpose |
 | --- | --- |
-| `C:\Projecten\Claude\AvaloniaAI\output\config.json` | Persisted API key (`{ "ApiKey": "…" }`) |
-| `C:\Projecten\Claude\AvaloniaAI\output\ai_prompt.txt` | Written on each Analyze run — the raw prompt sent to Claude |
-| `C:\Projecten\Claude\AvaloniaAI\scripts\sp_BlitzIndex.sql` | Source of the stored procedure (must be installed in `master` on localhost) |
+| `<exe-dir>\output\config.json` | Persisted API key (`{ "ApiKey": "…" }`). Copy `config.json.example` from repo root. |
+| `<exe-dir>\output\ai_prompt.txt` | Written on each Analyze run — the raw prompt sent to Claude |
+| `scripts\sp_BlitzIndex.sql` | Source of the stored procedure (must be installed in `master` on localhost) |

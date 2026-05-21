@@ -15,7 +15,7 @@ public class SqlServerService
         "Data Source=localhost;Integrated Security=True;TrustServerCertificate=True;";
 
     private static readonly string OutputPath =
-        Path.Combine(@"C:\Projecten\Claude\AvaloniaAI\output", "ai_prompt.txt");
+        Path.Combine(AppContext.BaseDirectory, "output", "ai_prompt.txt");
 
     public async Task<List<string>> GetDatabasesAsync()
     {
